@@ -1,0 +1,21 @@
+/dts-v1/;
+/plugin/;
+
+/* Flight bench add-ons, applied on top of the unmodified QEMU virt base */
+&{/} {
+	model = "Flight computer bench (QEMU virt)";
+
+	/* GNSS 1 PPS input on PL061 GPIO line 0 (line 3 is the power key) */
+	pps {
+		compatible = "pps-gpio";
+		gpios = <&gpio0 0 0>;
+	};
+
+	/* Simulated IMU; no driver matches yet (Y4 writes one) */
+	flight-imu {
+		compatible = "flight,imu-sim";
+		sample-rate-hz = <200>;
+		status = "okay";
+	};
+};
+
