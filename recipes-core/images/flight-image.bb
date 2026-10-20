@@ -4,7 +4,7 @@ LICENSE = "MIT"
 inherit core-image
 
 IMAGE_INSTALL = "packagegroup-core-boot ${CORE_IMAGE_EXTRA_INSTALL} \
-    strace htop iproute2 can-utils pps-tools"
+    strace htop iproute2 can-utils pps-tools voter"
 IMAGE_FEATURES += "ssh-server-dropbear"
 IMAGE_LINGUAS = ""
 
