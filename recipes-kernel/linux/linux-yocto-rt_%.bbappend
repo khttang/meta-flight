@@ -1,5 +1,7 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
-SRC_URI += "file://flight.cfg"
+SRC_URI += "file://flight.cfg \
+            file://0001-misc-add-imu-sim-a-simulated-IMU-platform-driver.patch \
+            "
 
 # Fail the build if any option in flight.cfg did not reach the final .config
 do_flight_cfgcheck() {

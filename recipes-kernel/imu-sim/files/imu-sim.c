@@ -101,7 +101,7 @@ static enum hrtimer_restart imu_sim_tick(struct hrtimer *t)
 	kfifo_put(&s->fifo, smp);
 	++s->samples;
 	spin_unlock_irqrestore(&s->lock, flags);
-    wake_up_interruptible(&s->wq);
+	wake_up_interruptible(&s->wq);
 	hrtimer_forward_now(t, s->period);
 	return HRTIMER_RESTART;
 }
@@ -146,30 +146,31 @@ static ssize_t imu_sim_read(struct file *f, char __user *buf, size_t count, loff
 	unsigned int n;
 	int ret;
 
-	if (want == 0) return -EINVAL;
+	if (want == 0)
+		return -EINVAL;
 	while (kfifo_is_empty(&s->fifo) && done == 0) {
-		if (f->f_flags & O_NONBLOCK) return -EAGAIN;
+		if (f->f_flags & O_NONBLOCK)
+			return -EAGAIN;
 		ret = wait_event_interruptible(s->wq, !kfifo_is_empty(&s->fifo));
-		if (ret != 0) return ret;
+		if (ret != 0)
+			return ret;
 	}
 
 	while (done < want) {
 		spin_lock_irq(&s->lock);
 		n = kfifo_out(&s->fifo, batch, IMU_SIM_READ_BATCH);
 		spin_unlock_irq(&s->lock);
-		if (n == 0) break;
+		if (n == 0)
+			break;
 		ret = copy_to_user(buf + done * sizeof(batch[0]), batch, n * sizeof(batch[0]));
 		if (ret != 0) {
-			if (done == 0) {
+			if (done == 0)
 				return -EFAULT;
-			} else {
-				break;
-			}
-		} else {
-			done += n;
+			break;
 		}
+		done += n;
 	}
-	
+
 	/*
 	 *  1. want == 0 (buffer smaller than one sample): return -EINVAL.
 	 *  2. While the FIFO is empty: with O_NONBLOCK in f->f_flags return -EAGAIN,
@@ -202,7 +203,8 @@ static long imu_sim_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 	case IMU_SIM_SET_FAULT:
 		if (get_user(v, uarg))
 			return -EFAULT;
-		if (v > IMU_SIM_FAULT_SPIKE) return -EINVAL;
+		if (v > IMU_SIM_FAULT_SPIKE)
+			return -EINVAL;
 		spin_lock_irq(&s->lock);
 		s->fault = v;
 		spin_unlock_irq(&s->lock);
@@ -272,9 +274,9 @@ static int imu_sim_probe(struct platform_device *pdev)
 	 */
 	s->rate_hz = 100;
 	device_property_read_u32(dev, "sample-rate-hz", &s->rate_hz);
-	if (s->rate_hz < 1 || s->rate_hz > 1000) {
-		return dev_err_probe(dev, -EINVAL, "sample-rate-hz %u out of range 1..1000\n", s->rate_hz);
-	}
+	if (s->rate_hz < 1 || s->rate_hz > 1000)
+		return dev_err_probe(dev, -EINVAL, "sample-rate-hz %u out of range 1..1000\n",
+				     s->rate_hz);
 	s->period = ns_to_ktime(NSEC_PER_SEC / s->rate_hz);
 
 	spin_lock_init(&s->lock);
@@ -318,11 +320,11 @@ static struct platform_driver imu_sim_driver = {
 		.name		= "imu-sim",
 		.of_match_table	= imu_sim_of_match,
 		.dev_groups	= imu_sim_groups,
-                /*
-                 * No sysfs bind/unbind: unbind with /dev/imu0 open frees the
-                 * devm state under the open file (use-after-free). The device
-                 * is fixed in the DT, and .owner already blocks rmmod.
-                 */
+		/*
+		 * No sysfs bind/unbind: unbind with /dev/imu0 open frees the
+		 * devm state under the open file (use-after-free). The device
+		 * is fixed in the DT, and .owner already blocks rmmod.
+		 */
 		.suppress_bind_attrs = true,
 	},
 };
